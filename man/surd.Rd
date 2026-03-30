@@ -14,7 +14,7 @@
   lag = 1,
   bin = 5,
   method = "equal",
-  max.combs = 10,
+  max.order = 10,
   threads = 1,
   base = 2,
   normalize = TRUE
@@ -27,7 +27,7 @@
   lag = 1,
   bin = 5,
   method = "equal",
-  max.combs = 10,
+  max.order = 10,
   threads = 1,
   base = 2,
   normalize = TRUE,
@@ -41,7 +41,7 @@
   lag = 1,
   bin = 5,
   method = "equal",
-  max.combs = 10,
+  max.order = 10,
   threads = 1,
   base = 2,
   normalize = TRUE
@@ -62,7 +62,7 @@
 \code{"sd"}, \code{"equal"}, \code{"geometric"}, \code{"quantile"},
 \verb{"natural("jenks")"}, or \code{"headtail"("headtails")}.}
 
-\item{max.combs}{(optional) Maximum combination order.}
+\item{max.order}{(optional) Maximum combination order.}
 
 \item{threads}{(optional) Number of threads used.}
 
@@ -85,7 +85,13 @@ A list.
 Synergistic-Unique-Redundant Decomposition
 }
 \note{
-SURD only support numeric data.
+\code{surd} only supports numeric input data. Both \code{bin} and \code{method}
+support variable-specific settings using R-style recycling:
+\itemize{
+\item length 1: applied to the target and all agent variables
+\item length 2: first for the target, second for all agents
+\item length > 2: first for the target, remaining values are recycled across agents
+}
 }
 \examples{
 columbus = sf::read_sf(system.file("case/columbus.gpkg", package="spEDM"))

@@ -10,6 +10,8 @@
 #'
 #' @returns A numerical value.
 #' @export
+#' @references
+#' Schreiber, T., 2000. Measuring Information Transfer. Physical Review Letters 85, 461–464.
 #'
 #' @examples
 #' set.seed(42)
@@ -20,8 +22,10 @@ te = \(data, target, agent, lag_p = 3, lag_q = 3, base = exp(1),
   type = match.arg(type)
   mat = .convert2mat(data, type)
   if (type == "disc") {
-    return(RcppDiscTE(mat, target, agent, lag_p, lag_q, base, TRUE, normalize, lag_single))
+    return(RcppDiscTE(mat, abs(target), abs(agent), lag_p, lag_q, 
+                      base, TRUE, normalize, lag_single))
   } else {
-    return(RcppContTE(mat, target, agent, lag_p, lag_q, k, 0, base, normalize, lag_single))
+    return(RcppContTE(mat, abs(target), abs(agent), lag_p, lag_q, 
+                      k, 0, base, normalize, lag_single))
   }
 }
