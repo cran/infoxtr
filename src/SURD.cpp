@@ -1,5 +1,6 @@
 #include <vector>
 #include <cmath>
+#include <string>
 #include <limits>
 #include <numeric>
 #include <algorithm>
@@ -37,8 +38,8 @@ Rcpp::List RcppSURD(const Rcpp::NumericMatrix& mat,
     {
         if (idx < 1 || idx > n_cols) {
             Rcpp::stop("Agent index %d out of bounds [1, %d]",
-                    static_cast<int>(idx),
-                    static_cast<int>(n_cols));
+                       static_cast<int>(idx),
+                       static_cast<int>(n_cols));
         }
         idx -= 1;
     }
@@ -186,6 +187,20 @@ Rcpp::List RcppSURD(const Rcpp::NumericMatrix& mat,
         pm[j + 1] = infoxtr::discretize::discretize(
             lagged_values[j], method_final[j], bin_final[j]
         );
+    }
+
+    // Remove leading lagged NA (time series only)
+    if (nb.isNull() && nrows.isNull())
+    {
+        size_t lag_abs = static_cast<size_t>(std::abs(lag));
+
+        if (lag_abs > 0 && lag_abs < n_obs)
+        {
+            for (auto& vec : pm)
+            {
+                vec.erase(vec.begin(), vec.begin() + lag_abs);
+            }
+        }
     }
 
     infoxtr::surd::SURDRes res = infoxtr::surd::surd(

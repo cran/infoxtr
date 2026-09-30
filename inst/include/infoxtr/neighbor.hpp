@@ -17,8 +17,11 @@
  *
  *  Distance methods (for NN4Mat):
  *      "euclidean"  : sqrt(sum((x - y)^2))
- *      "maximum"    : max(|x - y|)
  *      "manhattan"  : sum(|x - y|)
+ *      "maximum"    : max(|x - y|)
+ *      
+ *       When na_comp = true, the sum will be adjusted proportionally
+ *       to account for dimensions skipped due to NA/NaN.
  *
  *  Data layout:
  *      mat         : std::vector<std::vector<double>>
@@ -92,8 +95,9 @@ namespace neighbor
     inline std::vector<std::vector<size_t>> NN4Mat(
         const std::vector<std::vector<double>>& mat,
         size_t k,
-        std::string method = "euclidean",
+        const std::string& method = "euclidean",
         bool include_self = false,
+        bool na_comp = true,
         bool byrow = true)
     {
         const infoxtr::distance::distanceMethod dist_method =
@@ -162,6 +166,18 @@ namespace neighbor
 
                 if (n_valid == 0) continue;
 
+                // Pairwise-compensation for dimensions skipped due to NA/NaN
+                // (semantics aligned with R dist() and sklearn nan_euclidean_distances):
+                // scale the partial sum by dim / n_valid.
+                if (na_comp && n_valid < dim) {
+                    const double scale = static_cast<double>(dim) / static_cast<double>(n_valid);
+                    if (dist_method == infoxtr::distance::distanceMethod::Euclidean) {
+                        sum *= scale;
+                    } else if (dist_method == infoxtr::distance::distanceMethod::Manhattan) {
+                        sum *= scale;
+                    }
+                }  
+
                 double distv;
 
                 if (dist_method == infoxtr::distance::distanceMethod::Euclidean)
@@ -223,8 +239,9 @@ namespace neighbor
         const std::vector<size_t>& lib,
         const std::vector<size_t>& pred,
         size_t k,
-        std::string method = "euclidean",
+        const std::string& method = "euclidean",
         bool include_self = false,
+        bool na_comp = true,
         bool byrow = true)
     {
         const infoxtr::distance::distanceMethod dist_method =
@@ -298,6 +315,18 @@ namespace neighbor
                 }
 
                 if (n_valid == 0) continue;
+
+                // Pairwise-compensation for dimensions skipped due to NA/NaN
+                // (semantics aligned with R dist() and sklearn nan_euclidean_distances):
+                // scale the partial sum by dim / n_valid.
+                if (na_comp && n_valid < dim) {
+                    const double scale = static_cast<double>(dim) / static_cast<double>(n_valid);
+                    if (dist_method == infoxtr::distance::distanceMethod::Euclidean) {
+                        sum *= scale;
+                    } else if (dist_method == infoxtr::distance::distanceMethod::Manhattan) {
+                        sum *= scale;
+                    }
+                } 
 
                 double distv;
 

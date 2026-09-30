@@ -101,7 +101,7 @@ namespace transferentropy
     /***********************************************************
      * Transfer Entropy for Discrete Data
      ***********************************************************/
-    inline double transferentropy(
+    inline double transferEntropy(
         const DiscMat& mat,
         const std::vector<size_t>& target,
         const std::vector<size_t>& agent,
@@ -156,7 +156,7 @@ namespace transferentropy
         size_t ag_lag = lag_single ? ag.size() : ag.size() * lag_q;
         size_t N = n_obs - t0;
         DiscMat pm(tg.size() + ag_lag + tg_lag,
-                   std::vector<uint64_t>(N,0));
+                   std::vector<uint64_t>(N, 0));
         
         // Y_present
         for (size_t i = 0; i < tg.size(); ++i)
@@ -220,7 +220,7 @@ namespace transferentropy
     /***********************************************************
      * Transfer Entropy for Continuous Data
      ***********************************************************/
-    inline double transferentropy(
+    inline double transferEntropy(
         const ContMat& mat,
         const std::vector<size_t>& target,
         const std::vector<size_t>& agent,
@@ -229,6 +229,7 @@ namespace transferentropy
         size_t k = 3,
         size_t alg = 0,
         double base = 2.0,
+        bool na_comp = true,
         bool normalize = false,
         bool lag_single = false)
     {   
@@ -334,7 +335,7 @@ namespace transferentropy
         std::iota(tgl_idx.begin(), tgl_idx.end(), tg.size() + ag_lag);
 
         // Compute conditional mutual information
-        return infoxtr::ksginfo::cmi(pm, tg_idx, ag_idx, tgl_idx, k, alg, base, normalize);
+        return infoxtr::ksginfo::cmi(pm, tg_idx, ag_idx, tgl_idx, k, alg, base, na_comp, normalize);
     }    
 
 } // namespace transferentropy

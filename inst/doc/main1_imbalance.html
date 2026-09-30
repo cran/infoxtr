@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Wenbo Lyu" />
+
+
+<title>Information Imbalance and Imbalance Gain</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Information Imbalance and Imbalance
+Gain</h1>
+<h4 class="author">Wenbo Lyu</h4>
+<h4 class="date"><div class="line-block">Last update: 2026-09-30<br />
+Last run: 2026-09-30</div></h4>
+
+
+
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<div id="imbalance-gain" class="section level2">
+<h2>Imbalance Gain</h2>
+<p>The <strong>Imbalance Gain (IG)</strong> quantifies the information
+imbalance that a variable <span class="math inline">\(X\)</span>
+provides about the future state of another variable <span class="math inline">\(Y\)</span>. To assess the information transfer
+<span class="math inline">\(X \rightarrow Y\)</span>, IG compares the
+neighborhood structure of the future state of <span class="math inline">\(Y\)</span> with that of an augmented present state
+containing both <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span>.</p>
+<p>The basic quantity is the <strong>Information Imbalance</strong>
+between two distance spaces <span class="math inline">\(A\)</span> and
+<span class="math inline">\(B\)</span>:</p>
+<p><span class="math display">\[
+\Delta(A \rightarrow B) =
+\frac{2}{N}
+\left\langle
+r^B \mid r^A \leq k
+\right\rangle,
+\]</span></p>
+<p>where <span class="math inline">\(r^A\)</span> and <span class="math inline">\(r^B\)</span> are the distance ranks in spaces
+<span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span>, respectively, and <span class="math inline">\(k\)</span> is the number of nearest neighbors
+considered. A small <span class="math inline">\(\Delta(A\rightarrow
+B)\)</span> indicates that points close in <span class="math inline">\(A\)</span> also tend to be close in <span class="math inline">\(B\)</span>. The distance rank in one space
+therefore provides information about the structure of another space.</p>
+<p>For <span class="math inline">\(X \rightarrow Y\)</span>, let <span class="math inline">\(d_Y(0)\)</span> denote the distance space
+constructed from the present state of <span class="math inline">\(Y\)</span>, and let <span class="math inline">\(d_{XY}^{\alpha}(0)\)</span> denote the
+corresponding space after incorporating <span class="math inline">\(X\)</span> with a relative scaling parameter <span class="math inline">\(\alpha\)</span>. The future state of <span class="math inline">\(Y\)</span> is represented by <span class="math inline">\(d_Y(\tau)\)</span>, where <span class="math inline">\(\tau\)</span> is the prediction horizon. The
+Imbalance Gain evaluates</p>
+<p><span class="math display">\[
+\Delta(\alpha) = \Delta
+\left(d_{XY}^{\alpha}(0) \rightarrow d_Y(\tau) \right).
+\]</span></p>
+<p>If <span class="math inline">\(X\)</span> contains information about
+the future of <span class="math inline">\(Y\)</span>, adding <span class="math inline">\(X\)</span> should reduce the Information
+Imbalance. The resulting <strong>Imbalance Gain</strong> is</p>
+<p><span class="math display">\[
+\delta\Delta(X \rightarrow Y) =
+1 - \frac{\min_{\alpha}\Delta(\alpha)}{\Delta(0)}.
+\]</span></p>
+<p>Here, <span class="math inline">\(\Delta(0)\)</span> represents
+prediction using <span class="math inline">\(Y\)</span> alone, whereas
+<span class="math inline">\(\min_{\alpha}\Delta(\alpha)\)</span>
+represents the best prediction obtained after incorporating information
+from <span class="math inline">\(X\)</span>. <span class="math inline">\(\delta\Delta(X \rightarrow Y)=0\)</span> indicates
+no gain from adding <span class="math inline">\(X\)</span>, while a
+positive value indicates that <span class="math inline">\(X\)</span>
+provides additional information about the future state of <span class="math inline">\(Y\)</span>.</p>
+<p>The same calculation can be performed in the opposite direction,
+<span class="math inline">\(Y\rightarrow X\)</span>, allowing
+directional information transfer to be assessed for both directions.</p>
+</div>
+<div id="conditional-imbalance-gain" class="section level2">
+<h2>Conditional Imbalance Gain</h2>
+<p>The <strong>Conditional Imbalance Gain (CIG)</strong> extends the
+Imbalance Gain to assess the additional information provided by <span class="math inline">\(X\)</span> about the future state of <span class="math inline">\(Y\)</span> conditional on a third variable <span class="math inline">\(Z\)</span>. The present state of <span class="math inline">\(Z\)</span> is incorporated into the baseline
+prediction, and the contribution of <span class="math inline">\(X\)</span> is evaluated relative to this
+baseline.</p>
+<p>Let <span class="math inline">\(d_{YZ}^{\alpha_Z}(0)\)</span> denote
+the distance space constructed from the present states of <span class="math inline">\(Y\)</span> and <span class="math inline">\(Z\)</span>, with <span class="math inline">\(\alpha_Z\)</span> controlling the relative scaling
+of <span class="math inline">\(Z\)</span>. After incorporating <span class="math inline">\(X\)</span> with scaling parameter <span class="math inline">\(\alpha_X\)</span>, the augmented distance space is
+denoted by <span class="math inline">\(d_{XYZ}^{\alpha_X,\alpha_Z}(0)\)</span>. The
+Conditional Imbalance Gain is defined as</p>
+<p><span class="math display">\[
+\delta \Delta (X \rightarrow Y \mid Z) =
+1- \frac{
+\min\limits_{\alpha_X,\alpha_Z} \Delta
+\left( d_{XYZ}^{\alpha_X,\alpha_Z}(0) \rightarrow d_Y(\tau) \right)}
+{\min\limits_{\alpha_Z}
+\Delta \left(d_{YZ}^{\alpha_Z}(0) \rightarrow d_Y(\tau) \right)}.
+\]</span></p>
+<p>The denominator represents the best prediction of the future state of
+<span class="math inline">\(Y\)</span> using <span class="math inline">\(Y\)</span> and <span class="math inline">\(Z\)</span> at the present state. The numerator
+represents the best prediction after additionally incorporating <span class="math inline">\(X\)</span>. A positive <span class="math inline">\(\delta\Delta(X\rightarrow Y\mid Z)\)</span>
+indicates that <span class="math inline">\(X\)</span> provides
+additional predictive information about the future state of <span class="math inline">\(Y\)</span> beyond that contained in <span class="math inline">\(Y\)</span> and <span class="math inline">\(Z\)</span>.</p>
+<p>For a fixed <span class="math inline">\(\alpha_X\)</span>, the
+corresponding conditional Imbalance Gain is</p>
+<p><span class="math display">\[
+\delta \Delta(X\rightarrow Y\mid Z;\alpha_X) =
+1- \frac{
+\min\limits_{\alpha_Z} \Delta
+\left(d_{XYZ}^{\alpha_X,\alpha_Z}(0)  \rightarrow d_Y(\tau) \right)}
+{\min\limits_{\alpha_Z} \Delta
+\left( d_{YZ}^{\alpha_Z}(0) \rightarrow d_Y(\tau) \right)}.
+\]</span></p>
+<p>The optimal <span class="math inline">\(\alpha_X\)</span> can then be
+obtained by minimizing the conditional Information Imbalance over the
+range of <span class="math inline">\(\alpha_X\)</span>. The same
+formulation can be applied in the reverse direction to assess <span class="math inline">\(Y\rightarrow X\mid Z\)</span>.</p>
+</div>
+</div>
+<div id="example-cases" class="section level1">
+<h1>Example Cases</h1>
+<p>We illustrate the Imbalance Gain using the
+<em>Paramecium</em>–<em>Didinium</em> abundance data from the convergent
+cross mapping science paper. The data describe the temporal variation in
+the abundances of <em>Paramecium</em> and <em>Didinium</em>, providing a
+simple example for evaluating causal association between two interacting
+species.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>abun <span class="ot">=</span> readr<span class="sc">::</span><span class="fu">read_csv</span>(</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>  <span class="fu">system.file</span>(<span class="st">&quot;case/abundance.csv&quot;</span>, <span class="at">package =</span> <span class="st">&quot;pc&quot;</span></span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>))[, <span class="fu">c</span>(<span class="st">&quot;paramecium&quot;</span>, <span class="st">&quot;didinium&quot;</span>)]</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="fu">head</span>(abun)</span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="do">## # A tibble: 6 × 2</span></span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a><span class="do">##   paramecium didinium</span></span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a><span class="do">##        &lt;dbl&gt;    &lt;dbl&gt;</span></span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a><span class="do">## 1       15.6     5.76</span></span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a><span class="do">## 2       53.6     9.05</span></span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a><span class="do">## 3       73.3    17.3 </span></span>
+<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a><span class="do">## 4       93.9    42.0 </span></span>
+<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a><span class="do">## 5      115.     56.0 </span></span>
+<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a><span class="do">## 6       76.6    74.9</span></span></code></pre></div>
+<p>The <em>Paramecium</em>–<em>Didinium</em> abundance time series can
+be visualized as follows:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>fig_abun <span class="ot">=</span> <span class="fu">read.csv</span>((<span class="fu">system.file</span>(<span class="st">&quot;case/abundance.csv&quot;</span>, </span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>                                 <span class="at">package =</span> <span class="st">&quot;pc&quot;</span>))) <span class="sc">|&gt;</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  tidyr<span class="sc">::</span><span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="sc">-</span>time,</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>                      <span class="at">names_to =</span> <span class="st">&quot;species&quot;</span>, <span class="at">values_to =</span> <span class="st">&quot;value&quot;</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">species =</span> <span class="fu">factor</span>(species, </span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>                  <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">&quot;paramecium&quot;</span>, <span class="st">&quot;didinium&quot;</span>),</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>                  <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">&quot;paramecium&quot;</span>, <span class="st">&quot;didinium&quot;</span>))) <span class="sc">|&gt;</span> </span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">ggplot</span>(ggplot2<span class="sc">::</span><span class="fu">aes</span>(<span class="at">x =</span> time, <span class="at">y =</span> value, <span class="at">color =</span> species)) <span class="sc">+</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="fl">1.05</span>) <span class="sc">+</span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">5</span>, <span class="dv">35</span>, <span class="dv">10</span>), <span class="at">limits =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">0.5</span>, <span class="fl">35.5</span>),</span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>                              <span class="at">expand =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>), <span class="at">name =</span> <span class="st">&quot;Time (days)&quot;</span>) <span class="sc">+</span></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">scale_y_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">400</span>, <span class="dv">100</span>), <span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">410</span>),</span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>                              <span class="at">expand =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>), <span class="at">name =</span> <span class="st">&quot;Abundance (#/mL)&quot;</span>) <span class="sc">+</span></span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">scale_color_manual</span>(<span class="at">name =</span> <span class="cn">NULL</span>, </span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a>                              <span class="at">values =</span> <span class="fu">c</span>(<span class="st">&quot;paramecium&quot;</span> <span class="ot">=</span> <span class="st">&quot;#a7b3d9&quot;</span>, </span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a>                                         <span class="st">&quot;didinium&quot;</span> <span class="ot">=</span> <span class="st">&quot;#38a247&quot;</span>)) <span class="sc">+</span></span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">theme_bw</span>(<span class="at">base_family =</span> <span class="st">&quot;serif&quot;</span>) <span class="sc">+</span></span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">theme</span>(</span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a>        <span class="at">legend.direction =</span> <span class="st">&quot;horizontal&quot;</span>,</span>
+<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a>        <span class="at">legend.position =</span> <span class="st">&quot;inside&quot;</span>,</span>
+<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a>        <span class="at">legend.justification =</span> <span class="fu">c</span>(<span class="st">&quot;center&quot;</span>,<span class="st">&quot;top&quot;</span>),</span>
+<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a>        <span class="at">legend.background =</span> ggplot2<span class="sc">::</span><span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">&quot;transparent&quot;</span>, </span>
+<span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a>                                                  <span class="at">color =</span> <span class="st">&quot;transparent&quot;</span>),</span>
+<span id="cb2-24"><a href="#cb2-24" tabindex="-1"></a>        <span class="at">legend.text =</span> ggplot2<span class="sc">::</span><span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">15</span>),</span>
+<span id="cb2-25"><a href="#cb2-25" tabindex="-1"></a>        <span class="at">axis.text.x =</span> ggplot2<span class="sc">::</span><span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">15</span>),</span>
+<span id="cb2-26"><a href="#cb2-26" tabindex="-1"></a>        <span class="at">axis.text.y =</span> ggplot2<span class="sc">::</span><span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">15</span>),</span>
+<span id="cb2-27"><a href="#cb2-27" tabindex="-1"></a>        <span class="at">axis.title.x =</span> ggplot2<span class="sc">::</span><span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">15</span>),</span>
+<span id="cb2-28"><a href="#cb2-28" tabindex="-1"></a>        <span class="at">axis.title.y =</span> ggplot2<span class="sc">::</span><span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">15</span>))</span>
+<span id="cb2-29"><a href="#cb2-29" tabindex="-1"></a>fig_abun</span></code></pre></div>
+<div class="float">
+<img role="img" aria-label="Figure 1. Time series of Paramecium and Didinium abundances (#/mL) from an experiment by Veilleux (1979)." src="data:image/png;base64,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" alt="Figure 1. Time series of Paramecium and Didinium abundances (#/mL) from an experiment by Veilleux (1979)." />
+<div class="figcaption"><strong>Figure 1</strong>. Time series of
+Paramecium and Didinium abundances (#/mL) from an experiment by Veilleux
+(1979).</div>
+</div>
+<p>The observed time series are reconstructed using time-delay embedding
+to obtain the shadow manifolds (measurements). The reconstructed
+measurements are then used to evaluate the causality between the two
+interacting species.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>mp <span class="ot">=</span> stats<span class="sc">::</span><span class="fu">embed</span>(abun<span class="sc">$</span>paramecium, <span class="dv">5</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>md <span class="ot">=</span> stats<span class="sc">::</span><span class="fu">embed</span>(abun<span class="sc">$</span>didinium, <span class="dv">5</span>)</span></code></pre></div>
+<p>The Imbalance Gain is subsequently calculated to quantify the
+additional information provided by one species about the future state of
+the other. The analysis is performed in both directions, <span class="math inline">\(paramecium \rightarrow didinium\)</span> and <span class="math inline">\(didinium \rightarrow paramecium\)</span>.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>p_self_imb <span class="ot">=</span> purrr<span class="sc">::</span><span class="fu">map_dbl</span>(</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>    <span class="dv">1</span><span class="sc">:</span><span class="dv">50</span>, </span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>    \(.h) infoxtr<span class="sc">::</span><span class="fu">imbalance_gain</span>(mp, mp, <span class="at">alpha =</span> <span class="dv">0</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>                                  <span class="at">h =</span> .h, <span class="at">threads =</span> <span class="dv">10</span>))</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>d_self_imb <span class="ot">=</span> purrr<span class="sc">::</span><span class="fu">map_dbl</span>(</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>    <span class="dv">1</span><span class="sc">:</span><span class="dv">50</span>, </span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>    \(.h) infoxtr<span class="sc">::</span><span class="fu">imbalance_gain</span>(md, md, <span class="at">alpha =</span> <span class="dv">0</span>,</span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>                                  <span class="at">h =</span> .h, <span class="at">threads =</span> <span class="dv">10</span>))</span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>ig_p2d <span class="ot">=</span> infoxtr<span class="sc">::</span><span class="fu">imbalance_gain</span>(mp, md, <span class="at">alpha =</span> <span class="fu">seq</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="at">by =</span> <span class="fl">0.05</span>),</span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>                                 <span class="at">h =</span> <span class="dv">10</span>, <span class="at">threads =</span> <span class="dv">10</span>)</span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a>ig_d2p <span class="ot">=</span> infoxtr<span class="sc">::</span><span class="fu">imbalance_gain</span>(md, mp, <span class="at">alpha =</span> <span class="fu">seq</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="at">by =</span> <span class="fl">0.05</span>),</span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a>                                 <span class="at">h =</span> <span class="dv">10</span>, <span class="at">threads =</span> <span class="dv">10</span>)</span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a></span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">&quot;Imbalance Gain for paramecium -&gt; didinium: %.2f %%</span><span class="sc">\n</span><span class="st">&quot;</span>, <span class="dv">100</span> <span class="sc">*</span> <span class="dv">1</span> <span class="sc">-</span> <span class="fu">min</span>(ig_p2d) <span class="sc">/</span> ig_p2d[<span class="dv">1</span>]))</span>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a><span class="do">## Imbalance Gain for paramecium -&gt; didinium: 99.06 %</span></span>
+<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">&quot;Imbalance Gain for didinium -&gt; paramecium: %.2f %%</span><span class="sc">\n</span><span class="st">&quot;</span>, <span class="dv">100</span> <span class="sc">*</span> <span class="dv">1</span> <span class="sc">-</span> <span class="fu">min</span>(ig_d2p) <span class="sc">/</span> ig_d2p[<span class="dv">1</span>]))</span>
+<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a><span class="do">## Imbalance Gain for didinium -&gt; paramecium: 99.00 %</span></span></code></pre></div>
+<p>The imbalance gains for <span class="math inline">\(paramecium
+\rightarrow didinium\)</span> and <span class="math inline">\(didinium
+\rightarrow paramecium\)</span> are both greater than <span class="math inline">\(0\)</span>, which provides evidence of a
+bidirectional causal relationship between them.</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
